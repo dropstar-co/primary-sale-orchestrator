@@ -40,7 +40,7 @@ describe('PrimarySaleOrchestrator', function () {
     await nft.deployed()
     await pso.deployed()
 
-    await nft.mint(holder.address, 0, 1, CALLDATA)
+    await nft.mint(holder.address, 0, 2, CALLDATA)
 
     this.mock = pso
 
@@ -131,6 +131,10 @@ describe('PrimarySaleOrchestrator', function () {
     //console.log({ hash, recoverExpected, recoverReceived })
   })
 
+  function getRandomInt(max) {
+    return Math.floor(Math.random() * max)
+  }
+
   async function sign(
     signer,
     _tokenAddress,
@@ -151,8 +155,10 @@ describe('PrimarySaleOrchestrator', function () {
       { type: 'uint256', value: _tokenId },
     )
     */
+    const _id = getRandomInt(100000)
 
     const msgHash1 = await pso.doHash(
+      _id,
       _tokenAddress,
       _tokenId,
       _holderAddress,
@@ -175,6 +181,7 @@ describe('PrimarySaleOrchestrator', function () {
     const primarySaleOrchestratorrecover = await pso.recover(msgHash1, signature.v, signature.r, signature.s)
 
     return {
+      _id,
       _tokenAddress,
       _tokenId,
       _holderAddress,
@@ -197,6 +204,7 @@ describe('PrimarySaleOrchestrator', function () {
     const initialBalance = await provider.getBalance(paymentRecipient.address)
 
     const hash = await pso.doHash(
+      cheque._id,
       cheque._tokenAddress,
       cheque._tokenId,
       cheque._holderAddress,
@@ -216,6 +224,15 @@ describe('PrimarySaleOrchestrator', function () {
     const finalBalance = await provider.getBalance(paymentRecipient.address)
 
     expect(formatEther(finalBalance)).to.equal(formatEther(initialBalance.add(cheque._price)))
+  })
+
+  it('Should revert when claiming the same cheque twice', async function () {
+    await nft.connect(holder).setApprovalForAll(pso.address, true)
+
+    await call_PSO_fulfillBid(pso, bidWinner, cheque)
+
+    const secondTx = call_PSO_fulfillBid(pso, bidWinner, cheque)
+    await expect(secondTx).revertedWith('CHEQUEUSED')
   })
 
   it('Should revert when dates are backwards', async function () {
@@ -276,46 +293,13 @@ describe('PrimarySaleOrchestrator', function () {
   it('Should revert when there is no native token payed to the SC', async function () {
     await nft.connect(holder).setApprovalForAll(pso.address, true)
 
-    result = pso.fulfillBid(
-      cheque._tokenAddress,
-      cheque._tokenId,
-      cheque._holderAddress,
-      cheque._price,
-      cheque._bidWinnerAddress,
-      cheque._paymentRecipientAddress,
-      cheque._startDate,
-      cheque._deadline,
-      [
-        {
-          r: cheque._signature.r,
-          s: cheque._signature.s,
-          v: cheque._signature.v,
-        },
-      ],
-    )
+    const result = call_PSO_fulfillBid(pso, deployer, cheque, {})
 
     await expect(result).to.be.revertedWith('ERR2')
   })
 
   it('Should revert when the contract has no allowance for moving the NFT from the holder', async function () {
-    const result = pso.fulfillBid(
-      cheque._tokenAddress,
-      cheque._tokenId,
-      cheque._holderAddress,
-      cheque._price,
-      cheque._bidWinnerAddress,
-      cheque._paymentRecipientAddress,
-      cheque._startDate,
-      cheque._deadline,
-      [
-        {
-          r: cheque._signature.r,
-          s: cheque._signature.s,
-          v: cheque._signature.v,
-        },
-      ],
-    )
-
+    const result = call_PSO_fulfillBid(pso, deployer, cheque)
     await expect(result).to.be.revertedWith('ERR1')
   })
 
@@ -343,6 +327,7 @@ describe('PrimarySaleOrchestrator', function () {
 })
 async function call_PSO_fulfillBid(primarySaleOrchestrator, caller, cheque, overrides) {
   return primarySaleOrchestrator.connect(caller).fulfillBid(
+    cheque._id,
     cheque._tokenAddress,
     cheque._tokenId,
     cheque._holderAddress,

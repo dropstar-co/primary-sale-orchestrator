@@ -32,6 +32,7 @@ contract PrimarySaleOrchestrator is Ownable, EIP712 {
     }
 
     function fulfillBid(
+        uint256 _id,
         address _tokenAddress,
         uint256 _tokenId,
         address _holder,
@@ -63,16 +64,25 @@ contract PrimarySaleOrchestrator is Ownable, EIP712 {
         require(_paymentRecipient != address(0));
         require(_bidWinner != address(0));
 
+        bytes32 hashVal = doHash(
+            _id,
+            _tokenAddress,
+            _tokenId,
+            _holder,
+            _price,
+            _bidWinner,
+            _paymentRecipient,
+            _startDate,
+            _deadline
+        );
+
+        require(!hashUsed[hashVal], "CHEQUEUSED");
+
+        hashUsed[hashVal] = true;
         (bool sent, bytes memory data) = _paymentRecipient.call{value: msg.value}("");
         require(sent, "ERR4");
 
-        require(
-            recoverAll(
-                doHash(_tokenAddress, _tokenId, _holder, _price, _bidWinner, _paymentRecipient, _startDate, _deadline),
-                _signatures
-            ),
-            "ERR05"
-        );
+        require(recoverAll(hashVal, _signatures), "ERR05");
 
         ERC1155(_tokenAddress).safeBatchTransferFrom(_holder, _bidWinner, tokenIds, amounts, "0x00");
     }
@@ -82,6 +92,7 @@ contract PrimarySaleOrchestrator is Ownable, EIP712 {
     }
 
     function doHash(
+        uint256 _id,
         address _tokenAddress,
         uint256 _tokenId,
         address _holderAddress,
@@ -94,6 +105,7 @@ contract PrimarySaleOrchestrator is Ownable, EIP712 {
         return
             keccak256(
                 abi.encodePacked(
+                    _id,
                     _tokenAddress,
                     _tokenId,
                     _holderAddress,
