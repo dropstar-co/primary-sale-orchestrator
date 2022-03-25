@@ -51,7 +51,7 @@ describe('PrimarySaleOrchestrator', function () {
       nft.address,
       0,
       holder.address,
-      parseUnits('60', 'ether'),
+      parseUnits('60.0', 'ether'),
       bidWinner.address,
       paymentRecipient.address,
       currentBlockTimestamp - ONE_HOUR,
