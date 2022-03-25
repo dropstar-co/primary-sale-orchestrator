@@ -6,9 +6,14 @@ async function main() {
   console.log(`deployer.addresss = ${deployer.address}`)
 
   const PrimarySaleOrchestrator = await hre.ethers.getContractFactory('PrimarySaleOrchestrator')
-  const primarySaleOrchestrator = await PrimarySaleOrchestrator.deploy(metadataURI)
+  console.log('deploying...')
+  const primarySaleOrchestrator = await PrimarySaleOrchestrator.deploy()
+  console.log('deployed?')
+
+  console.log(`pso= ${primarySaleOrchestrator.address}`)
 
   await primarySaleOrchestrator.deployed()
+  console.log('deployed')
 
   console.log('PrimarySaleOrchestrator deployed to:', primarySaleOrchestrator.address)
 }

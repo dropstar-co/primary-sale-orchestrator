@@ -1,6 +1,6 @@
 # Purpose
 
-DropStar carries out an off chain aution for selling digital music & art to avoid all users paying gas to submit a bid. Instead, only the winner submits a transaction to pay and claim the piece. If the winner fails to submit the transaction in 24h, loses the nft and the next one in the list can claim the piece.
+DropStar carries out an off chain aution for selling digital music & art to avoid all users paying gas to submit a bid. Instead, only the winner submits a transaction to pay and claim the piece. If the winner fails to submit the transaction in 24h, loses the piece and the next one in the list can claim the piece.
 
 This is accomplished issuing cheques when the auction is over that the bid winner submits to the blockchain. This cheque is limited in time and only the right account can claim it.
 
