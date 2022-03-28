@@ -9,13 +9,13 @@ const {
   PSO_ADDRESS,
 } = require('../.env.js')
 
-console.log({ DATABASE_URL })
-
 const { Pool, Client } = require('pg')
-
 const ONE_DAY = 60 * 60 * 24
-
 const sign = require('../test/utils/createCheque')
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max)
+}
 
 async function main() {
   const [deployer] = await ethers.getSigners()
@@ -28,6 +28,13 @@ async function main() {
     return
   }
 
+  /*#################################################*/
+  //Modify to change the nft
+  const nftId = 3
+  /*#################################################*/
+
+  const saleVoucherID = getRandomInt(100000)
+
   console.log(`PSO_ADDRESS=${PSO_ADDRESS}`)
   console.log(`Signing with ${deployer.address}`)
 
@@ -35,9 +42,6 @@ async function main() {
   console.log({ signers })
 
   console.log(`signers    = ${signers}`)
-
-  const nftId = 3
-  const paymentAddress = ''
 
   const client = new Client({
     connectionString: DATABASE_URL,
@@ -78,7 +82,7 @@ async function main() {
   else splitPaymentAddress = PRIMARY_SALE_SPLIT_NFT_1_TO_4
 
   const saleVoucherUnsigned = {
-    _id: '1',
+    _id: saleVoucherID,
     _tokenAddress: firstRow.PolygonAddress,
     _tokenId: firstRow.tokenId,
     _holderAddress: firstRow.artistWallet,
@@ -91,8 +95,6 @@ async function main() {
   }
 
   console.log({ saleVoucherUnsigned })
-
-  //'epoch'::timestamptz;
 
   if (signers.length != 1 || signers[0] !== deployer.address) {
     console.log('Need to update signers!')
@@ -136,8 +138,9 @@ async function main() {
 
   const insertStm = await client.query(
     `insert into "SaleVouchers" 
-        ("paymentRecipientAddress","startDate", deadline , r , s , v , "createdAt" , "updatedAt" , "bidID") 
+        (id,"paymentRecipientAddress","startDate", deadline , r , s , v , "createdAt" , "updatedAt" , "bidID") 
     values (
+        ${saleVoucher._id},
         '${paymentRecipientAddress}',
         to_timestamp(${saleVoucher._startDate}),
         to_timestamp(${saleVoucher._deadline}),
