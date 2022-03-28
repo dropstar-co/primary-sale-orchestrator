@@ -5,6 +5,8 @@ const { provider } = ethers
 
 const { formatEther } = ethers.utils
 
+const sign = require('./utils/createCheque')
+
 describe('PrimarySaleOrchestrator', function () {
   let pso
   let nft
@@ -56,6 +58,7 @@ describe('PrimarySaleOrchestrator', function () {
       paymentRecipient.address,
       currentBlockTimestamp - ONE_HOUR,
       currentBlockTimestamp + ONE_HOUR,
+      pso,
     )
 
     chequeTooOld = await sign(
@@ -68,6 +71,7 @@ describe('PrimarySaleOrchestrator', function () {
       paymentRecipient.address,
       currentBlockTimestamp - ONE_DAY - ONE_HOUR,
       currentBlockTimestamp - ONE_DAY + ONE_HOUR,
+      pso,
     )
 
     chequeTooYoung = await sign(
@@ -80,6 +84,7 @@ describe('PrimarySaleOrchestrator', function () {
       paymentRecipient.address,
       currentBlockTimestamp + ONE_DAY - ONE_HOUR,
       currentBlockTimestamp + ONE_DAY + ONE_HOUR,
+      pso,
     )
 
     chequeHolder = await sign(
@@ -92,6 +97,7 @@ describe('PrimarySaleOrchestrator', function () {
       paymentRecipient.address,
       currentBlockTimestamp - ONE_HOUR,
       currentBlockTimestamp + ONE_HOUR,
+      pso,
     )
 
     chequeInvalidDates = await sign(
@@ -105,94 +111,11 @@ describe('PrimarySaleOrchestrator', function () {
       //These are backwar
       currentBlockTimestamp + ONE_HOUR,
       currentBlockTimestamp - ONE_HOUR,
+      pso,
     )
 
     await pso.setSigners([deployer.address])
-    /*
-    const hash = await pso.doHash(
-      cheque._tokenAddress,
-      cheque._tokenId,
-      cheque._holderAddress,
-      cheque._price,
-      cheque._bidWinnerAddress,
-      cheque._paymentRecipientAddress,
-      cheque._startDate,
-      cheque._deadline,
-    )
-    const recoverExpected = deployer.address
-    const recoverReceived = await pso.recover(
-      hash,
-      cheque._signature.v,
-      cheque._signature.r,
-      cheque._signature.s,
-    )
-    */
-
-    //console.log({ hash, recoverExpected, recoverReceived })
   })
-
-  function getRandomInt(max) {
-    return Math.floor(Math.random() * max)
-  }
-
-  async function sign(
-    signer,
-    _tokenAddress,
-    _tokenId,
-    _holderAddress,
-    _price,
-    _bidWinnerAddress,
-    _paymentRecipientAddress,
-    _startDate,
-    _deadline,
-  ) {
-    /*
-    let msgHash2 = await soliditySha3(
-      {
-        type: 'address',
-        value: _tokenAddress,
-      },
-      { type: 'uint256', value: _tokenId },
-    )
-    */
-    const _id = getRandomInt(100000)
-
-    const msgHash1 = await pso.doHash(
-      _id,
-      _tokenAddress,
-      _tokenId,
-      _holderAddress,
-      _price,
-      _bidWinnerAddress,
-      _paymentRecipientAddress,
-      _startDate,
-      _deadline,
-    )
-
-    //console.log({ msgHash1 })
-
-    // Sign the binary data
-    let signatureFull = await signer.signMessage(ethers.utils.arrayify(msgHash1))
-
-    const ethersutilsverifyMessage = ethers.utils.verifyMessage(ethers.utils.arrayify(msgHash1), signatureFull)
-
-    // For Solidity, we need the expanded-format of a signature
-    let signature = ethers.utils.splitSignature(signatureFull)
-    const primarySaleOrchestratorrecover = await pso.recover(msgHash1, signature.v, signature.r, signature.s)
-
-    return {
-      _id,
-      _tokenAddress,
-      _tokenId,
-      _holderAddress,
-      _price,
-      _bidWinnerAddress,
-      _paymentRecipientAddress,
-      _startDate,
-      _deadline,
-      _signature: signature,
-    }
-  }
 
   it('Should exist when deployed', async function () {
     await pso.deployed()
