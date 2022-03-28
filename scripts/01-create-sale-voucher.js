@@ -3,9 +3,14 @@ const { parseUnits, parseEther } = ethers.utils
 
 //const { PSO_ADDRESS } = require('../.env.js')
 
-const { STAGING_DATABASE_URL: DATABASE_URL } = require('../.env.js')
+const {
+  STAGING_DATABASE_URL: DATABASE_URL,
+  PRIMARY_SALE_SPLIT_NFT_1_TO_4,
+  PRIMARY_SALE_SPLIT_NFT_5,
+  PRIMARY_SALE_SPLIT_NFT_6,
+  PSO_ADDRESS,
+} = require('../.env.js')
 
-const PSO_ADDRESS = '0xE7A05168c601B5C83C235BA50052A2Fb0F0ffDe6'
 const { Pool, Client } = require('pg')
 
 const ONE_DAY = 60 * 60 * 24
@@ -62,9 +67,9 @@ async function main() {
   console.log({ _priceWithoutNetworkFee, _priceWithoutNetworkFeeStr })
 
   let splitPaymentAddress
-  if (firstRow.tokenId == 4) splitPaymentAddress = '0x4DE604f8F385950a20Ae1D1e95AD1ae764eB6540'
-  else if (firstRow.tokenId == 5) splitPaymentAddress = '0x3b1988eA0E027BfF2170eB1A4cFBf218A1267408'
-  else splitPaymentAddress = '0x2018853461ffE2c147755b3bd4c7C3c07E9C7C76'
+  if (firstRow.tokenId == 4) splitPaymentAddress = PRIMARY_SALE_SPLIT_NFT_5
+  else if (firstRow.tokenId == 5) splitPaymentAddress = PRIMARY_SALE_SPLIT_NFT_6
+  else splitPaymentAddress = PRIMARY_SALE_SPLIT_NFT_1_TO_4
 
   const startDate = parseInt((await ethers.provider.getBlock(await ethers.provider.getBlockNumber())).timestamp)
   const endDate = startDate + ONE_DAY
