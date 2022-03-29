@@ -152,7 +152,10 @@ async function main() {
         ${bidId}
     )`,
   )
-  console.log({ insertStm })
+
+  const updateBids = await client.query(`update "Bids" set "isWinner"=true where id=${firstRow.id}`)
+
+  console.log({ insertStm, updateBids })
 }
 
 main()
