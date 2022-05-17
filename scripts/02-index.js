@@ -2,7 +2,7 @@ require('dotenv').config()
 
 const { parseUnits, parseEther } = ethers.utils
 const {
-  LOCAL_DATABASE_URL: DATABASE_URL,
+  PRODUCTION_DATABASE_URL: DATABASE_URL,
   PRIMARY_SALE_SPLIT_NFT_1_TO_4,
   PRIMARY_SALE_SPLIT_NFT_5,
   PRIMARY_SALE_SPLIT_NFT_6,

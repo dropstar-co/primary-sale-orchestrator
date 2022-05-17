@@ -4,7 +4,7 @@ const { parseUnits, parseEther } = ethers.utils
 //const { PSO_ADDRESS } = require('../.env.js')
 
 const {
-  STAGING_DATABASE_URL: DATABASE_URL,
+  LOCAL_DATABASE_URL: DATABASE_URL,
   PRIMARY_SALE_SPLIT_NFT_1_TO_4,
   PRIMARY_SALE_SPLIT_NFT_5,
   PRIMARY_SALE_SPLIT_NFT_6,
@@ -29,14 +29,13 @@ async function main() {
   console.log(`Signing with ${deployer.address}`)
 
   const nftId = 3
-  const paymentAddress = ''
 
   const client = new Client({
     connectionString: DATABASE_URL,
   })
   client.connect()
-  const { rowCount, rows } = await client.query(
-    `SELECT 
+
+  const sql = `SELECT 
         *,
         b.id as bidid,
         u."walletAddress" as userWallet,
@@ -50,8 +49,14 @@ async function main() {
         b."userID"= u.id 
         and "nftID" = ${nftId} 
         and n.id=b."nftID" 
-    order by "DateBid" desc`,
-  )
+    order by "DateBid" desc`
+  console.log({ sql })
+  const { rowCount, rows } = await client.query(sql)
+
+  if (rowCount === 0) {
+    console.log('No bids for nft ' + nftId)
+    return
+  }
 
   const firstRow = rows[0]
   console.log({ firstRow, rowCount })
@@ -96,7 +101,11 @@ async function main() {
 
   console.log({ saleVoucher })
 
-  const updateStatement = await client.query(`update "Bids" set "isWinner" = true where id=${firstRow.bidid}`)
+  const updateSQL = `update "Bids" set "isWinner" = true where id=${firstRow.bidid}`
+  console.log({ updateSQL })
+
+  const updateStatement = await client.query(updateSQL)
+
   console.log({ updateStatement })
 
   const msgHash1 = await pso.doHash(
